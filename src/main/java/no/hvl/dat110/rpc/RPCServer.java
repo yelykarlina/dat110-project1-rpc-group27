@@ -27,6 +27,7 @@ public class RPCServer {
 		
 		// the stop RPC method is built into the server
 		RPCRemoteImpl rpcstop = new RPCServerStopImpl(RPCCommon.RPIDSTOP,this);
+		services.put(RPCCommon.RPIDSTOP, rpcstop);
 		
 		System.out.println("RPC SERVER RUN - Services: " + services.size());
 			
@@ -43,16 +44,33 @@ public class RPCServer {
 		   
 		   // TODO - START
 		   // - receive a Message containing an RPC request
+		   requestmsg = connection.receive();
+		   // message payload is the rpc message (rpcid + marshalled param)
+		   byte[] rpcmsg = requestmsg.getData();
 		   // - extract the identifier for the RPC method to be invoked from the RPC request
+		   rpcid = rpcmsg[0];
 		   // - extract the method's parameter by decapsulating using the RPCUtils
+		   byte[] param = RPCUtils.decapsulate(rpcmsg);
 		   // - lookup the method to be invoked
-		   // - invoke the method and pass the param
+		   RPCRemoteImpl impl = services.get(rpcid);
+
+		   byte[] returnpayload;
+		   // if unknown rpcid, return void (or empty)
+		   if (impl == null) {
+		   		returnpayload = RPCUtils.marshallVoid();
+		   } else {
+		   	// - invoke the method and pass the param
+		   		returnpayload = impl.invoke(param);
+		   	if (returnpayload == null) {
+		   		returnpayload = RPCUtils.marshallVoid();
+		   	}
+		   }
 		   // - encapsulate return value 
+		   byte[] replyrpcmsg = RPCUtils.encapsulate(rpcid, returnpayload);
 		   // - send back the message containing the RPC reply
+		   replymsg = new Message(replyrpcmsg);
+		   connection.send(replymsg);
 			
-		   if (true)
-				throw new UnsupportedOperationException(TODO.method());
-		   
 		   // TODO - END
 
 			// stop the server if it was stop methods that was called

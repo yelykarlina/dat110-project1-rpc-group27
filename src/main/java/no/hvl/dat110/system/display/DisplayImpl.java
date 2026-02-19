@@ -20,11 +20,16 @@ public class DisplayImpl extends RPCRemoteImpl {
 		byte[] returnval = null;
 		
 		// TODO - START: 
-		// implement unmarshalling, call, and marshall for write RPC method
-		// look at how this is done in the SensorImpl class for the read method
+		// implement unmarshalling
+		String message = RPCUtils.unmarshallString(param);
 		
-		if (true)
-			throw new UnsupportedOperationException(TODO.method());
+		//call
+		write(message);
+		
+		//and marshall for write RPC method
+		returnval = RPCUtils.marshallVoid();
+		
+		// look at how this is done in the SensorImpl class for the read method
 		
 		// TODO - END
 		

@@ -8,40 +8,44 @@ public class MessageUtils {
 
 	public static final int SEGMENTSIZE = 128;
 
-	public static int MESSAGINGPORT = 8080;
+	public static int MESSAGINGPORT = 9090;
 	public static String MESSAGINGHOST = "localhost";
 
 	public static byte[] encapsulate(Message message) {
 		
-		byte[] segment = null;
-		byte[] data;
+		if (message == null) throw new IllegalArgumentException("message is null");
+
+		byte[] data = message.getData();
+		if (data == null) data = new byte[0];
+		if (data.length > SEGMENTSIZE - 1)
+			throw new IllegalArgumentException("payload too large (max 127 bytes)");
+
+		byte[] segment = new byte[SEGMENTSIZE];
+
+		// first byte = length (0..127)
+		segment[0] = (byte) data.length;
+
+		// copy payload into segment starting at index 1
+		System.arraycopy(data, 0, segment, 1, data.length);
 		
-		// TODO - START
-		
-		// encapulate/encode the payload data of the message and form a segment
-		// according to the segment format for the messaging layer
-		
-		if (true)
-			throw new UnsupportedOperationException(TODO.method());
-			
-		// TODO - END
 		return segment;
 		
 	}
 
 	public static Message decapsulate(byte[] segment) {
 
-		Message message = null;
-		
-		// TODO - START
-		// decapsulate segment and put received payload data into a message
-		
-		if (true)
-			throw new UnsupportedOperationException(TODO.method());
-		
-		// TODO - END
-		
-		return message;
+		if (segment == null) throw new IllegalArgumentException("segment is null");
+		if (segment.length != SEGMENTSIZE)
+			throw new IllegalArgumentException("segment must be exactly " + SEGMENTSIZE + " bytes");
+
+		// segment[0] is signed byte in Java; convert to 0..255 using & 0xFF
+		int len = segment[0] & 0xFF;
+		if (len > SEGMENTSIZE - 1)
+			throw new IllegalArgumentException("invalid payload length: " + len);
+
+		byte[] data = Arrays.copyOfRange(segment, 1, 1 + len);
+
+		return new Message(data);
 		
 	}
 	
